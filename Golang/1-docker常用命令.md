@@ -247,6 +247,14 @@ docker run -id --volumes-form
    	redis redis-server /usr/local/etc/redis/redis.conf; \
    done
    
+   ------------
+   for port in $(seq 6374 6376); do \
+   	docker run -di --restart always --name redis-${port} --net host \
+   	-v /usr/local/docker-redis/redis-cluster/${port}/conf/redis.conf:/usr/local/etc/redis/redis.conf \
+   	-v /usr/local/docker-redis/redis-cluster/${port}/data:/data \
+   	redis redis-server /usr/local/etc/redis/redis.conf; \
+   done
+   
    # 不使用restart
    for port in $(seq 6371 6373); do \
    	docker run -di --name redis-${port} --net host \
@@ -267,11 +275,11 @@ docker run -id --volumes-form
    
    docker start redis-6371 redis-6372 redis-6373
    ```
-
    
-
+   
+   
    4: 启动redis 【192.168.142.133机器】
-
+   
    ```shell
    for port in $(seq 6374 6376); do \
    	docker run -di --restart always --name redis-${port} --net host \
@@ -290,8 +298,16 @@ docker run -id --volumes-form
    
    docker start redis-6374 redis-6375 redis-6376
    ```
-
+   
    5: 进入到redis-6371容器里
-
+   
    > docker exec -it redis-6371 bash
+   
+   6：通过如下命令创建redis-cluster
+   
+   ```
+   redis-cli -a 1234 --cluster create 192.168.142.132:6371  192.168.142.132:6372  192.168.142.132:6373 192.168.142.133:6374 192.168.142.133:6375 192.168.142.133:6376 --cluster-replicas 1
+   ```
+   
+   
 
