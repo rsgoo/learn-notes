@@ -1,0 +1,33 @@
+```golang
+package main
+import (
+   "fmt"
+   "strings"
+   "time"
+)
+func main() {
+   // 得到unix时间戳
+   t := time.Now()
+   timestamp := t.Unix()
+   fmt.Println(timestamp)
+   // 输出 1539671461
+   // 时间戳转时间格式字符串
+   tm := time.Unix(timestamp,0)
+   s_tm := tm.Format("2006-01-02 15:04:05")
+   fmt.Println(s_tm)
+   // 输出 2018-10-16 13:55:53
+   // 字符串换时间戳
+   strTime := "2008-07-08 12:03:59"
+   ts,_ := time.ParseInLocation("2006-01-02 15:04:05",strTime,time.Local)
+   timestamp = ts.Unix()
+   fmt.Println(timestamp)
+   // 输出 1215489839
+   // 1215518639 转为时间字符串
+   tm = time.Unix(1215489839,0)
+   s_tm = tm.Format("2006-01-02 15:04:05")
+   fmt.Println(s_tm)
+   // 输出 2008-07-08 12:03:59
+}
+```
+
+原文：https://www.gwalker.cn/article-5325a4bg451d6fd01af9dc84e6ba4a3f.html
