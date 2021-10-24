@@ -307,7 +307,104 @@ docker run -id --volumes-form
    
    ```
    redis-cli -a 1234 --cluster create 192.168.142.132:6371  192.168.142.132:6372  192.168.142.132:6373 192.168.142.133:6374 192.168.142.133:6375 192.168.142.133:6376 --cluster-replicas 1
+   
+   #### 得到如下内容
+   root@ins:/usr/local/docker-redis/redis-cluster# docker exec -it redis-6371 bash
+   root@ins:/data# redis-cli -a 1234 --cluster create 192.168.142.132:6371  192.168.142.132:6372  192.168.142.132:6373 192.168.142.133:6374 192.168.142.133:6375 192.168.142.133:6376 --cluster-replicas 1
+   Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.
+   >>> Performing hash slots allocation on 6 nodes...
+   Master[0] -> Slots 0 - 5460
+   Master[1] -> Slots 5461 - 10922
+   Master[2] -> Slots 10923 - 16383
+   Adding replica 192.168.142.133:6376 to 192.168.142.132:6371
+   Adding replica 192.168.142.132:6373 to 192.168.142.133:6374
+   Adding replica 192.168.142.133:6375 to 192.168.142.132:6372
+   M: a95ab5dfe1f436d708caecf8ff07e31179b7841d 192.168.142.132:6371
+      slots:[0-5460] (5461 slots) master
+   M: 00fd0c40c98ec423893f3e95e796bca658b48879 192.168.142.132:6372
+      slots:[10923-16383] (5461 slots) master
+   S: ecf145b387c1f394127a48f8395a5f3c31d3d122 192.168.142.132:6373
+      replicates 26e9956bcecb9e52758c0faf7013f55fc38be4f4
+   M: 26e9956bcecb9e52758c0faf7013f55fc38be4f4 192.168.142.133:6374
+      slots:[5461-10922] (5462 slots) master
+   S: bbb4eb83f155c2e6c90d10199bdf70782e7f1712 192.168.142.133:6375
+      replicates 00fd0c40c98ec423893f3e95e796bca658b48879
+   S: 417074224532bff2b30224b61c741f9572f8c493 192.168.142.133:6376
+      replicates a95ab5dfe1f436d708caecf8ff07e31179b7841d
+   Can I set the above configuration? (type 'yes' to accept): yes
+   >>> Nodes configuration updated
+   >>> Assign a different config epoch to each node
+   >>> Sending CLUSTER MEET messages to join the cluster
+   Waiting for the cluster to join
+   .
+   >>> Performing Cluster Check (using node 192.168.142.132:6371)
+   M: a95ab5dfe1f436d708caecf8ff07e31179b7841d 192.168.142.132:6371
+      slots:[0-5460] (5461 slots) master
+      1 additional replica(s)
+   S: bbb4eb83f155c2e6c90d10199bdf70782e7f1712 192.168.142.133:6375
+      slots: (0 slots) slave
+      replicates 00fd0c40c98ec423893f3e95e796bca658b48879
+   S: 417074224532bff2b30224b61c741f9572f8c493 192.168.142.133:6376
+      slots: (0 slots) slave
+      replicates a95ab5dfe1f436d708caecf8ff07e31179b7841d
+   M: 26e9956bcecb9e52758c0faf7013f55fc38be4f4 192.168.142.133:6374
+      slots:[5461-10922] (5462 slots) master
+      1 additional replica(s)
+   S: ecf145b387c1f394127a48f8395a5f3c31d3d122 192.168.142.132:6373
+      slots: (0 slots) slave
+      replicates 26e9956bcecb9e52758c0faf7013f55fc38be4f4
+   M: 00fd0c40c98ec423893f3e95e796bca658b48879 192.168.142.132:6372
+      slots:[10923-16383] (5461 slots) master
+      1 additional replica(s)
+   [OK] All nodes agree about slots configuration.
+   >>> Check for open slots...                                                                                                                                                                   
+   >>> Check slots coverage...
+   [OK] All 16384 slots covered.
+   root@ins:/data#                                                                     
    ```
    
+   7：查看集群状态
    
+   > redis-cli -a 1234 --cluster check 192.168.142.132:6372
+   >
+   > cd /usr/local/bin/
+   >
+   > ./redis-cli -c -a 1234 -h localhost -p 6371 *
 
+##### 8: Docker Compose使用
+
+1：安装
+
+> sudo curl -L "https://get.daocloud.io/docker/compose/releases/download/1.26.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+>
+> sudo chmod +x /usr/local/bin/docker-compose
+
+2：使用
+
+- 创建目录 `mkdir -p /usr/local/docker-nginx` 并切换至此目录下
+
+- vim docker-compose.yml，编辑内容如下
+
+  ```
+  # 描述Compose 的版本信息
+  version: "3.8"
+  
+  # 定义服务，可以是多个
+  services:
+  	nginx:	# 服务名称
+  		image:	nginx # 创建容器时所需的镜像
+          container_name: mynginx	#容器名称，默认为 "工程名称_服务条目名称_序号"
+          ports: # 宿主机与容器的端口映射关系
+          	- "80:80"	# 左边宿主机端口:右边容器端口
+          networks: # 配置容器连接的网络，引用顶级 networks 下的条目
+          	- nginx-net
+          	
+  # 定义网络，可以时多个。如果不声明，默认会创建一个网络名称为 "工程名称_default" 的 bridge 网络
+  networks:
+  	nginx-net: #一个具体网络的条目名称
+  		name: nginx-net # 网络名称，默认为 "工程名称_网络条目名称"
+  		driver: bridge # 网络模式，默认为bridge 
+  
+  ```
+
+  
