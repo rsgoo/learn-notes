@@ -236,6 +236,7 @@ name String
 ```sql
 在合并树引擎中必须指定主键 或是是 ORDER BY
 不指定主键的情况下 order by 字段就是主键字段
+ck中主键没有唯一约束
 
 【在合并的分区上排序】
 
@@ -320,5 +321,125 @@ insert into tb_merge2 values
 (22,'a3',23,'bj'),
 (23,'a3',25,'zy');
 
+
+====================================
+create table tb_orders_back(
+oid UUID,
+money Decimal(10,2),
+ctime DateTime
+) Engine = MergeTree
+primary key oid
+order by (oid,ctime)
+partition by toYYYYMM(ctime);
+
+create table tb_orders(
+oid UUID,
+money Decimal(10,2),
+ctime DateTime
+) Engine = MergeTree()
+primary key oid
+order by (oid,ctime)
+partition by toYYYYMM(ctime);
+
+
+insert into tb_orders values(generateUUIDv4(),100.00,now());
+insert into tb_orders values(generateUUIDv4(),200.00,now());
+insert into tb_orders values(generateUUIDv4(),300.00,now());
+insert into tb_orders values(generateUUIDv4(),400.00,'2021-01-12 12:12:11');
+insert into tb_orders values(generateUUIDv4(),400.00,'2021-01-02 22:12:11');
+insert into tb_orders values(generateUUIDv4(),500.00,now());
+insert into tb_orders values(generateUUIDv4(),600.00,now());
+insert into tb_orders values(generateUUIDv4(),700.00,'2021-11-02 09:12:11');
+insert into tb_orders values(generateUUIDv4(),900.00,'2021-11-12 19:22:11');
+insert into tb_orders values(generateUUIDv4(),1600.00,'2021-06-02 09:12:11');
+insert into tb_orders values(generateUUIDv4(),1900.00,'2021-06-12 19:22:11');
+
+insert into tb_orders values(generateUUIDv4(),1900.00,'2021-11-12 09:52:11');
+
+
+================================================
+create table tb_orders_1(
+oid Int8,
+money Decimal(10,2),
+ctime DateTime
+) Engine = MergeTree()
+primary key oid
+order by (oid,ctime)
+partition by toYYYYMM(ctime);
+
+insert into tb_orders_1 values(1,100.00,now());
+
+insert into tb_orders_1 values(2,200.00,now());
+
+========================================================
+
+create table tb_replacingMergeTree1(
+oid Int8,
+money Decimal(10,2),
+ctime DateTime
+) Engine = ReplacingMergeTree()
+order by (oid)
+partition by toDate(ctime);
+
+insert into tb_replacingMergeTree1 values(3,30,'2021-01-01 11:11:11');
+
+insert into tb_replacingMergeTree1 values(1,10,'2021-01-01 11:11:01');
+insert into tb_replacingMergeTree1 values(1,10,'2021-01-01 11:11:01');
+
+insert into tb_replacingMergeTree1 values(2,20,'2021-11-01 11:11:11');
+
+insert into tb_replacingMergeTree1 values(1,10,'2021-01-01 11:11:01');
+
+==========================================================================
+
+# ReplacingMergeTree(version) 保留分区内 版本较大的数据
+# version 可以是数值类型，也可以是时间类型
+
+create table tb_replacingMergeTree2(
+oid Int8,
+money Decimal(10,2),
+ctime DateTime
+) Engine = ReplacingMergeTree(ctime)
+order by (oid)
+partition by toDate(ctime);
+
+insert into tb_replacingMergeTree2 values(3,30,'2021-01-01 11:11:11');
+
+insert into tb_replacingMergeTree2 values(1,10,'2021-01-01 11:11:01');
+insert into tb_replacingMergeTree2 values(1,10,'2021-01-01 11:11:21');
+
+insert into tb_replacingMergeTree2 values(2,20,'2021-11-01 11:11:11');
+insert into tb_replacingMergeTree2 values(4,40,'2021-11-01 11:11:21');
+insert into tb_replacingMergeTree2 values(1,10,'2021-01-01 11:11:11');
+
+insert into tb_replacingMergeTree2 values(2,60,'2021-11-01 11:21:11');
+
+------------------------------------------------------------
+create table tb_replacingMergeTree3(
+oid Int8,
+money Decimal(10,2),
+ctime DateTime,
+version UInt8
+) Engine = ReplacingMergeTree(version)
+order by (oid)
+partition by toDate(version);
+
+insert into tb_replacingMergeTree3 values(3,30,'2021-01-01 11:11:11',1);
+
+insert into tb_replacingMergeTree3 values(1,10,'2021-01-01 11:11:01',2);
+insert into tb_replacingMergeTree3 values(1,10,'2021-01-01 11:11:21',2);
+
+insert into tb_replacingMergeTree3 values(2,20,'2021-11-01 11:11:11',3);
+insert into tb_replacingMergeTree3 values(4,40,'2021-11-01 11:11:21',4);
+insert into tb_replacingMergeTree3 values(1,10,'2021-01-01 11:11:11',4);
+
+insert into tb_replacingMergeTree3 values(2,60,'2021-11-01 11:21:11',5);
+insert into tb_replacingMergeTree3 values(5,60,'2021-11-01 11:21:11',6);
+insert into tb_replacingMergeTree3 values(5,60,'2021-12-01 11:21:11',6);
+
+
+insert into tb_replacingMergeTree3 values(6,50,'2021-11-01 11:21:11',7);
+insert into tb_replacingMergeTree3 values(6,50,'2021-11-01 11:31:11',7);
+insert into tb_replacingMergeTree3 values(7,50,'2021-11-01 11:31:11',7);
 ```
 
