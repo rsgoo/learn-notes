@@ -43,7 +43,7 @@ add id_rsa_pub text-characters to Github
 
 - then cat && copy `/home/aaron/.ssh/id_rsa.pub` content to textbox
 
-![Logo](https://github.com/rsgoo/learn-notes/ZoneForResource/github-add-ssh-key.png)
+![Logo](https://github.com/rsgoo/learn-notes/blob/master/ZoneForResource/github-add-ssh-key.png)
 
 #### additional notes
 
